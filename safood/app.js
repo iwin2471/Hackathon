@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var db = mongoose.connect('mongodb://localhost/Safood');
+mongoose.Promise = global.Promise;
 
 var userSchema = mongoose.Schema({
     userid: {type: String, unique: true},
@@ -17,6 +18,7 @@ var userSchema = mongoose.Schema({
 
     history:[{
        foodname:{type: String},
+       thumbnail:{type: String},
        searchdate:{type: Date}
     }],
 
@@ -76,7 +78,6 @@ FoodDic = mongoose.model("FoodDic", fooddicSchema);
 var routes = require('./routes/index');
 var auth = require('./routes/auth');
 var img = require('./routes/img');
-var dbin = require('./routes/dbin');
 var search = require('./routes/search');
 var group = require('./routes/group');
 var food = require('./routes/food');
@@ -98,7 +99,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/auth', auth);
-app.use('/db', dbin);
 app.use('/search', search);
 app.use('/img', img);
 app.use('/group', group);
