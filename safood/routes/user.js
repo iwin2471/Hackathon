@@ -17,10 +17,9 @@ router.post('/destroySelf', function(req, res) {
 
 router.post('/getSelfInfo', function(req, res) {
     var apikey = req.body.apikey;
+    console.log(apikey);
     if (apikey != undefined && apikey != null) {
-        User.findOne({
-            apikey: apikey
-        }, function(err, doc) {
+        User.findOne({apikey: apikey}, function(err, doc) {
             if (err) {
                 throw err;
             } else res.send(doc);

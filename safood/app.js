@@ -10,7 +10,7 @@ mongoose.Promise = global.Promise;
 
 var userSchema = mongoose.Schema({
     userid: {type: String, unique: true},
-    username: {type: String},
+    username: {type: String, unique: true},
     password: {type: String},
     profileImage: {type: String},
     apikey: {type: String},
@@ -29,11 +29,11 @@ var userSchema = mongoose.Schema({
 });
 
 var userGroupSchema = mongoose.Schema({
-    groupname: {type: String},
+    groupname: {type: String, unique: true},
     groupid: {type: String},
     admin: {type: String},
     members: [String],
-    limit: {type: Number},
+    limit: {type: String},
     img_url: {type: String},
 
     memo:[{
@@ -58,7 +58,11 @@ var safoodGroupSchema = mongoose.Schema({
     id: {type: String},
     name: {type: String},
     admin: {type: String},
-    foodList: {type: Array}
+
+    foodList: [{
+       foodName: {type: String},
+       img_url: {type: String},
+    }]
 });
 
 var fooddicSchema = mongoose.Schema({
@@ -81,6 +85,7 @@ var img = require('./routes/img');
 var search = require('./routes/search');
 var group = require('./routes/group');
 var food = require('./routes/food');
+var user = require('./routes/user');
 var safood = require('./routes/safood');
 
 var app = express();
@@ -104,6 +109,7 @@ app.use('/img', img);
 app.use('/group', group);
 app.use('/food', food);
 app.use('/safood', safood);
+app.use('/user', user);
 
 
 

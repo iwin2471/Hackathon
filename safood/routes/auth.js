@@ -27,7 +27,6 @@ router.post('/register', function(req, res) {
         }, function(err, docs) {
             if (err) throw err;
             console.log(docs);
-            if (docs.length == 0) {
                 var newUser = new User({
                     apikey: randomStr.generate(),
                     groupid: '',
@@ -43,10 +42,9 @@ router.post('/register', function(req, res) {
                 console.log('User Register : \n' + newUser);
                 newUser.save(function(err) {
                     if (err) {
-                        throw err;
+                        res.sendStatus(409);
                     } else res.send(newUser);
                 });
-            } else res.sendStatus(409);
         });
     } else res.sendStatus(403);
 });

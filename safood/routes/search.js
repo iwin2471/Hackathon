@@ -32,6 +32,9 @@ router.post('/barcode', function(req, res) {
                             .query('limit=1')
                             .query('searchValue=' + req.body.barcode)
                             .end(function(resc) {
+                              if(resc.body.items.length == 0){
+                                return res.sendStatus(405);
+                              }
                                 id = resc.body.items[0].foodId;
                                 thumbnail = resc.body.items[0].thumbnailUrl;
 
@@ -85,6 +88,8 @@ router.post('/barcode', function(req, res) {
                             });
                     }
                 });
+            }else{
+              res.status(405);
             }
         });
 
@@ -145,13 +150,13 @@ function checkAll(res, result, barcode, date, foods){
   var final = [];
 
   for (var i = 0; i < result.exception.religion.length; i++) {
-      if (result.exception.religion[i]) {
+      if (JSON.parse(result.exception.religion[i])) {
           real.push(re[i]);
       }
   }
 
   for (var i = 0; i < result.exception.allergy.length; i++) {
-      if (result.exception.allergy[i]) {
+      if (JSON.parse(result.exception.allergy[i])) {
           real.push(al[i]);
       }
   }
@@ -180,6 +185,8 @@ function checkAll(res, result, barcode, date, foods){
 
       }
   });
+
+
 }else{
   console.log(foods);
   for (var i = 0; i < real.length; i++) {

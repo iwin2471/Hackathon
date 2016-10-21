@@ -28,32 +28,40 @@ var upload = function(req, res, groupid) {
         if (err) {
             deferred.reject();
         } else if (req.file === undefined) {
-            UserGroup.find({}, function(err, docs) {
-                if (docs) {
-                    var newGroup = new UserGroup({
-                        groupid: groupid,
-                        admin: req.body.admin,
-                        limit: req.body.limit,
-                        img_url: "defult",
-                        members: [
-                            req.body.admin + ""
-                        ]
-                    });
+            User.findOne({apikey: req.body.apikey}, function(err, person) {
 
-                    newGroup.save(function(err) {
-                        if (err) throw err;
-                    });
+              if(person){
+                  var newGroup = new UserGroup({
+                      groupname: req.body.groupname,
+                      groupid: groupid,
+                      admin: person.username,
+                      limit: req.body.limit,
+                      img_url: "defult",
+                      members: [
+                          person.username
+                      ]
+                  });
 
-                    User.update({
-                        userid: req.body.admin
-                    }, {
-                        groupid: newGroup.groupid
-                    }, function(err, numAf) {
-                        if (err) throw err;
-                        else res.status(200).send(newGroup);
-                    });
-                } else res.sendStatus(409);
-            });
+                  UserGroup.findOne({groupname: req.body.groupname}, function(err, doc) {
+                     if(!doc){
+                       User.update({apikey: req.body.apikey}, {groupid: groupid}, function(err, resul){
+                         if(err) err;
+                       });
+
+                       newGroup.save(function(err) {
+                           if (err){
+                              res.send(err)
+                         }else{
+                            res.send(newGroup);
+                         }
+                       });
+
+                     }else{
+                       res.sendStatus(409);
+                     }
+                  });
+                }
+                });
         } else {
             deferred.resolve(req.file.uploadedFile);
         }
@@ -65,24 +73,30 @@ var upload = function(req, res, groupid) {
 
 router.post('/searchGroup', function(req, res) {
     var params = ['query'];
+    var resul = [];
     if (checkParams(req.body, params)) {
+        UserGroup.find({}, function(err, docs) {
+            if(err){
+               err;
+            }else {
+              for(var i = 0; i<docs.length; i++){
+                if(docs[i].groupname.indexOf(req.body.query) > -1){
+                  resul.push(docs[i]);
+                }
+              }
 
-        UserGroup.find({
-            groupname: req.body.query
-        }, function(err, docs) {
-            if (docs.length != 0) res.send(docs);
-            else res.sendStatus(401);
+              res.send(resul);
+            }
         })
-    } else res.sendStatus(403);
+    } else{
+     res.sendStatus(403);}
 });
 
 router.post('/getGroupInfo', function(req, res) {
     var params = ['groupid'];
 
     if (checkParams(req.body, params)) {
-        UserGroup.find({
-            groupid: req.body.groupid
-        }, function(err, doc) {
+        UserGroup.find({groupid: req.body.groupid}, function(err, doc) {
             if (doc.length != 0) res.send(doc);
             else res.sendStatus(401);
         })
@@ -135,12 +149,7 @@ router.post('/leaveGroup', function(req, res) {
             if (err) throw err;
             else if (doc != null) {
                 if (doc.members.indexOf(req.body.apikey) > -1) {
-                    UserGroup.update({
-                        groupid: req.body.groupid
-                    }, {
-                        pull: {
-                            members: req.body.apikey
-                        }
+                    UserGroup.update({groupid: req.body.groupid}, {pull: {members: req.body.apikey}
                     }, function(err, numAff) {
                         if (err) throw err;
                         else if (numAff == 0) res.sendStatus(401);
@@ -155,52 +164,57 @@ router.post('/leaveGroup', function(req, res) {
 
 router.post('/admin/createGroup', function(req, res) {
     var groupid = randomStr.generate();
-    console.log(req.files);
-    if (1) {
+    apikey = req.body.apikey
         upload(req, res, groupid).then(function(file) {
-            UserGroup.find({}, function(err, docs){
-                if (docs.length != 0) {
+                User.findOne({apikey: req.body.apikey}, function(err, person) {
+                  if(err) err;
+                  if(person){
                     var newGroup = new UserGroup({
                         groupname: req.body.groupname,
                         groupid: groupid,
-                        admin: req.body.admin,
+                        admin: person.username,
                         limit: req.body.limit,
-                        img_url: "http://iwin247.net:6974/img/" + groupid,
+                        img_url: "http://iwin247.net:4000/img/group/" + groupid,
                         members: [
-                            req.body.admin
+                            person.username
                         ]
                     });
 
-                    newGroup.save(function(err) {
-                        if (err) throw err;
+                    console.log(groupid);
+
+                    UserGroup.findOne({groupname: req.body.groupname}, function(err, doc) {
+                       if(!doc){
+                         newGroup.save(function(err) {
+                             if (err){
+                               res.sendStatus(409);
+                             }else{
+                               User.update({apikey: req.body.apikey}, {groupid: groupid}, function(err, resul){
+                                 if(err) err;
+                               });
+                               res.send(newGroup);
+                             }
+                         });
+
+                       }else{
+                         res.sendStatus(409);
+                       }
                     });
 
-                    User.update({
-                        userid: req.body.admin
-                    }, {
-                        groupid: newGroup.groupid
-                    }, function(err, numAf) {
-                        if (err) throw err;
-                        else res.status(200).send(newGroup);
-                    });
-                } else res.sendStatus(409);
-            });
+                  }
+
+                })
+
 
         }, function(err) {
-            if (err) return res.status(409).send(err);
+            if (err) return res.status(408).send(err);
         });
-
-
-    } else res.sendStatus(403);
 });
 
 router.post('/admin/destroyGroup', function(req, res) {
     var params = ['userid', 'groupid'];
 
     if (checkParams(req.body, params)) {
-        UserGroup.findOne({
-            groupid: req.body.groupid
-        }, function(err, doc) {
+        UserGroup.findOne({groupid: req.body.groupid}, function(err, doc) {
             if (doc != null) {
                 if (doc.admin == req.body.userid) {
                     UserGroup.remove({
