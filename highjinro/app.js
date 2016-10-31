@@ -4,8 +4,28 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var db = mongoose.connect('mongodb://localhost/highjinro');
+mongoose.Promise = global.Promise;
+
+var userSchema = mongoose.Schema({
+    id: {type: String, unique: true},
+    pw: {type: String},
+    name: {type: String},
+    token: {type: String}
+});
+
+var schoolSchema = mongoose.Schema({
+   asdf: [String],
+});
+
+Users = mongoose.model("users", userSchema);
+Schools = mongoose.model("schools", schoolSchema);
+
 
 var routes = require('./routes/index');
+var auth = require('./routes/auth');
+var search = require('./routes/search');
 var users = require('./routes/users');
 
 var app = express();
@@ -23,6 +43,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
+app.use('/search', search);
+app.use('/auth', auth);
 app.use('/users', users);
 
 // catch 404 and forward to error handler
