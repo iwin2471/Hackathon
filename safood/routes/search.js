@@ -100,6 +100,7 @@ router.post('/', function(req, res) {
     var params = ['foodname'];
     var search = [];
     if (checkParams(req.body, params)) {
+
         Food.find({}, function(err, food) {
             for (var i = 0; i < food.length; i++) {
                 if (food[i].name.indexOf(req.body.foodname) > -1) {
@@ -113,6 +114,8 @@ router.post('/', function(req, res) {
                 res.sendStatus(405)
             }
         });
+    }else{
+      res.sendStatus(403)
     }
 });
 
@@ -178,6 +181,7 @@ function checkAll(res, result, barcode, date, foods){
 
           res.json({
               name: food.name,
+              foodid: food.foodid,
               thumbnail: food.thumbnail,
               foodIngredient: food.foodIngredient,
               allergy: final
@@ -199,7 +203,7 @@ function checkAll(res, result, barcode, date, foods){
       if (err) throw err;
   });
 
-  res.json({name: foods.name,thumbnail: foods.thumbnail, foodIngredient: foods.foodIngredient, allergy: final});
+  res.json({name: foods.name,thumbnail: foods.thumbnail, foodid: foods.foodid, foodIngredient: foods.foodIngredient, allergy: final});
 }
 
 

@@ -343,21 +343,31 @@ router.post('/admin/removeUser', function(req, res) {
 
 router.post('/memoAdd', function(req, res) {
     var params = ['title', 'content', 'color', 'foods', 'groupid'];
+    var img_url = [];
 
     if (checkParams(req.body, params)) {
-        UserGroup.findOne({
-            groupid: req.body.groupid
-        }, function(err, doc) {
+      var foods = req.body.foods.toString().split(',');
+        UserGroup.findOne({groupid: req.body.groupid}, function(err, doc) {
             if (doc != null) {
-                UserGroup.update({groupid: req.body.groupid}, {$push: {memo: {title: req.body.title,content: req.body.content,color: req.body.color,foods: req.body.foods.toString().split(',')}}}, function(err, result) {
+              Food.find({}, function(err, food) {
+                for(var i = 0; i < foods.length; i++){
+                  for (var j = 0; j < food.length; j++) {
+                      if (food[j].name.indexOf(foods[i]) >  -1 || food[j].name == foods[i]) {
+                          img_url.push(food[j].thumbnail);
+                      }
+                  }
+                }
+
+                UserGroup.update({groupid: req.body.groupid}, {$push: {memo: {title: req.body.title,content: req.body.content,color: req.body.color,foods: foods, img_url: img_url}}}, function(err, result) {
                     if (err) err;
-                    UserGroup.findOne({
-                        groupid: req.body.groupid
-                    }, function(err, docs) {
+                    UserGroup.findOne({groupid: req.body.groupid}, function(err, docs) {
                         if (err) err;
                         res.status(200).send(docs.memo);
                     });
                 });
+
+              });
+
             } else res.sendStatus(400);
         })
     }
@@ -368,9 +378,7 @@ router.post('/memo', function(req, res) {
     var params = ['groupid'];
 
     if (checkParams(req.body, params)) {
-        UserGroup.findOne({
-            groupid: req.body.groupid
-        }, function(err, doc) {
+        UserGroup.findOne({groupid: req.body.groupid}, function(err, doc) {
             if (doc != null) {
                 res.status(200).json(doc.memo);
             } else res.sendStatus(400);

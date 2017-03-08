@@ -9,8 +9,8 @@ var db = mongoose.connect('mongodb://localhost/Safood');
 mongoose.Promise = global.Promise;
 
 var userSchema = mongoose.Schema({
-    userid: {type: String, unique: true},
-    username: {type: String, unique: true},
+    userid: {type: String},
+    username: {type: String},
     password: {type: String},
     profileImage: {type: String},
     apikey: {type: String},
@@ -41,6 +41,7 @@ var userGroupSchema = mongoose.Schema({
       content: {type: String},
       color: {type: Number},
       foods: [String],
+      img_url: [String],
       have: {type: String}
     }]
 });
@@ -58,8 +59,10 @@ var safoodGroupSchema = mongoose.Schema({
     id: {type: String},
     name: {type: String},
     admin: {type: String},
+    color: {type: Number},
 
     foodList: [{
+       foodid: {type: String},
        foodName: {type: String},
        img_url: {type: String},
     }]

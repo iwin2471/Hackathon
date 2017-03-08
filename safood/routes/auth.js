@@ -7,14 +7,10 @@ var autologinParams = ['userid', 'apikey'];
 
 router.post('/login', function(req, res) {
     if (loginParams.every(str => req.body[str] != undefined)) {
-        User.findOne({
-            userid: req.body.userid
-        }, function(err, doc) {
+        User.findOne({userid: req.body.userid}, function(err, doc) {
             if (doc != null) {
-                if (loginParams.every(str => req.body[str] == doc[str])) {
-                    res.send(doc);
+                    res.status(200).send(doc);
                     console.log('User Login : \n' + doc);
-                } else res.sendStatus(400);
             } else res.sendStatus(400);
         });
     } else res.sendStatus(403);
@@ -22,24 +18,23 @@ router.post('/login', function(req, res) {
 
 router.post('/register', function(req, res) {
     if (registerParams.every(str => req.body[str] != undefined || req.body[str] != null)) {
-        User.find({
-            userid: req.body.userid
-        }, function(err, docs) {
+        User.find({userid: req.body.userid}, function(err, docs) {
             if (err) throw err;
-            console.log(docs);
                 var newUser = new User({
+                    userid: req.body.userid,
+                    username: req.body.username,
+                    password: req.body.password,
                     apikey: randomStr.generate(),
                     groupid: '',
                     profileImage: '',
                     history: [],
                     exception: {
-                        religion: [false, false, false, false],
-                        allergy: [false, false, false, false, false, false, false, false, false, false],
+                        religion: [true,true,true,true],
+                        allergy: [true, true,true,true,true,true,true,true,true,true],
                         custom: []
                     }
                 });
-                registerParams.forEach(a => newUser[a] = req.body[a]);
-                console.log('User Register : \n' + newUser);
+
                 newUser.save(function(err) {
                     if (err) {
                         res.sendStatus(409);
@@ -50,10 +45,8 @@ router.post('/register', function(req, res) {
 });
 router.post('/login/auto', function(req, res) {
     if (autologinParams.every(str => req.body[str] != undefined || req.body[str] != null)) {
-        User.findOne({
-            userid: req.body.userid,
-            apikey: req.body.apikey
-        }, function(err, doc) {
+        User.findOne({userid: req.body.userid, apikey: req.body.apikey}, function(err, doc) {
+          
             if (doc != null) res.status(200).send(doc);
             else res.sendStatus(401);
         });

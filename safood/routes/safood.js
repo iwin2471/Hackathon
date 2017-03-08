@@ -2,29 +2,26 @@ var express = require('express');
 var router = express.Router();
 var randomStr = require("randomstring");
 
-router.post('/Addgroup', function(req, res) {
-    var params = ['groupname', 'apikey', "url", "color"];
+router.post('/newSafoodGroup', function(req, res) {
+    var params = ['groupname', 'apikey', "color"];
 
     if (checkParams(req.body, params)) {
       var newGroup = new SafoodGroup({
-          groupname: req.body.groupname,
-          groupid: randomStr.generate(),
-          color:
+          id: randomStr.generate(),
+          name: req.body.groupname,
+          color: req.body.color,
           admin: req.body.apikey,
-          img_url: req.body.url,
       });
 
-      UserGroup.findOne({groupname: req.body.groupname}, function(err, doc) {
+      SafoodGroup.findOne({name: req.body.groupname}, function(err, doc) {
          if(!doc){
-           User.update({apikey: req.body.apikey}, {groupid: groupid}, function(err, resul){
-             if(err) err;
-           });
-
            newGroup.save(function(err) {
-               if (err){
+              if (err){
                   res.send(err)
              }else{
-                res.send(newGroup);
+                 SafoodGroup.find({admin: req.body.apikey}, function(err, foods) {
+                    res.send(foods);
+                 });
              }
            });
 
@@ -33,6 +30,56 @@ router.post('/Addgroup', function(req, res) {
          }
       });
     } else res.sendStatus(403);
+});
+
+router.post('/addToSafoodGroup', function(req, res) {
+    var params = ['groupid', 'apikey', "foodid"];
+    console.log(req.body.foodid);
+    if (checkParams(req.body, params)) {
+
+      SafoodGroup.findOne({groupid: req.body.groupid}, function(err, doc) {
+        Food.findOne({foodid: req.body.foodid}, function(err, food){
+          SafoodGroup.update({admin: req.body.apikey},{$push: {foodList:{foodName: food.name, img_url: food.thumbnail, foodid: req.body.foodid}}}, function(err, resul) {
+            if(err) err;
+            else{
+              SafoodGroup.find({admin: req.body.apikey}, function(err, group) {
+                if(err) err;
+                res.status(200).send(group);
+              });
+            }
+          });
+        });
+      });
+    } else res.sendStatus(403);
+});
+
+
+router.post('/removeFromSafoodGroup', function(req, res) {
+  var params = ['groupid', 'apikey', "foodid"];
+
+  if (checkParams(req.body, params)) {
+
+    SafoodGroup.findOne({groupid: req.body.groupid}, function(err, doc) {
+      Food.findOne({foodid: req.body.foodid}, function(err, food){
+        SafoodGroup.update({admin: req.body.apikey},{$pull: {foodList:{foodName: food.name, img_url: food.img_url, foodid: req.body.foodid}}}, function(err, resul) {
+          if(err) err;
+          else{
+            SafoodGroup.find({admin: req.body.apikey}, function(err, group) {
+              if(err) err;
+              res.status(200).send(group);
+            });
+          }
+        });
+      });
+    });
+  } else res.sendStatus(403);
+});
+
+router.post('/getSafoodGroupList', function(req, res) {
+
+   SafoodGroup.find({admin: req.body.apikey}, function(err, groups) {
+       res.status(200).send(groups);
+   });
 });
 
 
